@@ -13,6 +13,8 @@ import { getConsistentMachineId } from "@/shared/utils/machineId";
 
 const execFileAsync = promisify(execFile);
 
+// Absolute Windows paths: `turbopackIgnore` at each fs call keeps `next build` on a Windows host
+// from tracing them as bundle file references (fails when Tailscale is not installed there).
 const WINDOWS_TAILSCALE_BIN = "C:\\Program Files\\Tailscale\\tailscale.exe";
 const WINDOWS_TAILSCALED_BIN = "C:\\Program Files\\Tailscale\\tailscaled.exe";
 
@@ -268,7 +270,10 @@ async function resolveBinary({
     return { binaryPath: pathBinary, installSource: "path", managedInstall: false };
   }
 
-  if (getCurrentPlatform() === "win32" && fs.existsSync(WINDOWS_TAILSCALE_BIN)) {
+  if (
+    getCurrentPlatform() === "win32" &&
+    fs.existsSync(/* turbopackIgnore: true */ WINDOWS_TAILSCALE_BIN)
+  ) {
     return {
       binaryPath: WINDOWS_TAILSCALE_BIN,
       installSource: "windows-default",
@@ -293,7 +298,10 @@ async function resolveDaemonBinary(tailscaleBinaryPath: string | null) {
   const pathBinary = await resolvePathCommand("tailscaled");
   if (pathBinary) return pathBinary;
 
-  if (getCurrentPlatform() === "win32" && fs.existsSync(WINDOWS_TAILSCALED_BIN))
+  if (
+    getCurrentPlatform() === "win32" &&
+    fs.existsSync(/* turbopackIgnore: true */ WINDOWS_TAILSCALED_BIN)
+  )
     return WINDOWS_TAILSCALED_BIN;
 
   return null;
